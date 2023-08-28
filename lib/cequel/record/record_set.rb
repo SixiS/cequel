@@ -216,6 +216,34 @@ module Cequel
       end
 
       #
+      # Filter the record set to records containing a given value in an indexed
+      # column
+      #
+      # @overload where(column_name, value)
+      #   @param column_name [Symbol] column for filter
+      #   @param value value to match in given column
+      #   @return [RecordSet] record set with filter applied
+      #   @deprecated
+      #
+      # @overload where(column_values)
+      #   @param column_values [Hash] map of key column names to values
+      #   @return [RecordSet] record set with filter applied
+      #
+      # @raise [IllegalQuery] if applying filter would generate an impossible
+      #   query
+      # @raise [ArgumentError] if the specified column is not a column that
+      #   can be filtered on
+      #
+      # @note Filtering on a primary key requires also filtering on all prior
+      #   primary keys
+      # @note Only one secondary index filter can be used in a given query
+      # @note Secondary index filters cannot be mixed with primary key filters
+      #
+      def vector_search(params)
+        scoped(vector_search_params: params)
+      end
+
+      #
       # @deprecated Use {#[]} instead
       #
       # Scope to values for one or more primary key columns
@@ -745,7 +773,7 @@ module Cequel
                    :row_limit, :lower_bound, :upper_bound,
                    :scoped_secondary_columns, :query_consistency,
                    :query_page_size, :query_paging_state,
-                   :allow_filtering
+                   :allow_filtering, :vector_search_params
 
       protected
 
