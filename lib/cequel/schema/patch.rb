@@ -94,13 +94,30 @@ module Cequel
       class AddIndex < AbstractChange
         protected def post_init(column)
           @column = column
-          @index_name = column.index_name
+          if column.respond_to?(:index_settings)
+            @index_settings = column.index_settings
+            @index_name = @index_settings&.fetch(:name, nil)
+          end
+          if column.respond_to?(:index_name)
+            @index_name ||= column.index_name
+          end
         end
 
-        attr_reader :column, :index_name
+        attr_reader :column, :index_name, :index_settings
 
         def to_cql
-          %Q|CREATE INDEX "#{index_name}" ON "#{table.name}" ("#{column.name}")|
+          if index_settings.blank?
+            %Q|CREATE INDEX "#{index_name}" ON "#{table.name}" ("#{column.name}")|
+          else
+            cql = %Q|CREATE CUSTOM INDEX "#{index_name}" ON "#{table.name}" ("#{column.name}")|
+            if index_settings&.fetch(:using, nil)
+              cql += %Q| USING '#{index_settings[:using]}'|
+            end
+            if index_settings&.fetch(:options, nil)
+              cql += %Q| WITH OPTIONS = #{index_settings[:options].to_json.gsub("\"", "\'")}|
+            end
+            cql
+          end
         end
 
         protected

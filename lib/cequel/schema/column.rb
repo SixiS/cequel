@@ -301,5 +301,46 @@ module Cequel
         end
       end
     end
+
+    #
+    # A Vector column
+    #
+    # @see
+    #   https://docs.datastax.com/en/astra-serverless/docs/vector-search/cql.html
+    #   Astra documentation for vector columns
+    #
+    class Vector < CollectionColumn
+      # @return [Type] the type of keys in this map
+      attr_reader :type, :dimension, :index_settings
+
+      #
+      # @param name [Symbol] name of this column
+      # @param key_type [Type] type of the keys in the map
+      # @param value_type [Type] type of the values in the map
+      #
+      def initialize(name, type, dimension, index_settings = nil)
+        super(name, type)
+        @dimensions = dimension
+        @index_settings = index_settings
+      end
+
+      def indexed?
+        index_settings.present?
+      end
+
+      # (see Column#to_cql)
+      def to_cql
+        "#{@name} VECTOR <#{@type}, #{@dimension}>"
+      end
+
+      #
+      # @param (see Column#cast)
+      # @return [Array] Array representing vector values
+      #
+      def cast(value)
+        value.map { |element| @type.cast(element) }
+      end
+    end
+
   end
 end

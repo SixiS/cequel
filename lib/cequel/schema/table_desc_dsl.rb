@@ -122,6 +122,17 @@ module Cequel
         columns << Map.new(name, type(key_type), type(value_type))
       end
 
+      # Describe a column of type vector.
+      #
+      # name - The name of the column.
+      # type - The type of the elements of this column. Either a
+      #   `Cequel::Type` or a symbol. See `Cequel::Type`.
+      # dimensions - The dimensions of the vector
+      #
+      def vector(name, type, dimensions, options = {})
+        columns << Vector.new(name, type(type), dimensions, options.fetch(:index, nil))
+      end
+
       # Describe property of the table.
       #
       # name - name of property.

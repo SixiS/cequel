@@ -39,6 +39,7 @@ module Cequel
         add_where_statement
         add_bounds
         add_order
+        add_vector_search
         set_consistency
         set_allow_filtering
         set_page_size
@@ -55,7 +56,7 @@ module Cequel
                      :scoped_secondary_columns, :lower_bound,
                      :upper_bound, :reversed?, :order_by_column,
                      :query_consistency, :query_page_size, :query_paging_state,
-                     :ascends_by?, :allow_filtering
+                     :ascends_by?, :allow_filtering, :vector_search_params
 
       private
 
@@ -92,6 +93,12 @@ module Cequel
         column = order_by_column
         if column.present? && reversed?
           self.data_set = data_set.order(column.name => sort_direction)
+        end
+      end
+
+      def add_vector_search
+        if vector_search_params
+          self.data_set = data_set.vector_search(vector_search_params)
         end
       end
 
