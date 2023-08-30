@@ -774,7 +774,7 @@ module Cequel
       end
 
       def vector_search_cql
-        if vector_search_params.any?
+        if vector_search_params && vector_search_params.any?
           column = vector_search_params.keys[0]
           vector = vector_search_params.values[0]
           " ORDER BY #{column} ANN OF #{vector}"
