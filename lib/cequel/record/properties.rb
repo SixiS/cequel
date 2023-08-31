@@ -205,7 +205,7 @@ module Cequel
         #
         # @param name [Symbol] the name of the vector
         # @param key_type [Symbol] the type of the keys in the vector
-        # @param vector_dimensions [Integer] the dimensions for the vector
+        # @param vector_dimension [Integer] the dimension for the vector
         # @param options [Options] options for the set
         # @option options [Object] :index ({}) index settings for the vector
         # @return [void]
@@ -213,7 +213,7 @@ module Cequel
         # @see Record::Vector
         # @since Datastax Aurora 2023-08-01
         #
-        def vector(name, key_type, dimensions, options = {})
+        def vector(name, key_type, dimension, options = {})
           def_collection_accessors(name, Vector)
           set_attribute_default(name, options[:default])
           set_empty_attribute(name) { [] }

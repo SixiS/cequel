@@ -56,11 +56,26 @@ module Cequel
         [].tap do |statements|
           table.data_columns.each do |column|
             if column.indexed?
-              statements <<
-                "CREATE INDEX #{column.index_name} " \
-                "ON #{table.name} (#{column.name})"
+              statements << index_statement_for(column)
             end
           end
+        end
+      end
+
+      def index_statement_for(column)
+        if column.respond_to?(:index_settings) && column.index_settings
+          index_settings = column.index_settings
+          index_name = index_settings[:index_name] || column.index_name
+          cql = %Q|CREATE CUSTOM INDEX "#{index_name}" ON "#{table.name}" ("#{column.name}")|
+          if index_settings&.fetch(:using, nil)
+            cql += %Q| USING '#{index_settings[:using]}'|
+          end
+          if index_settings&.fetch(:options, nil)
+            cql += %Q| WITH OPTIONS = #{index_settings[:options].to_json.gsub("\"", "\'")}|
+          end
+          cql
+        else
+          %Q|CREATE INDEX "#{column.index_name}" ON "#{table.name}" ("#{column.name}")|
         end
       end
 
