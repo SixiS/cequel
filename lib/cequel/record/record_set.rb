@@ -240,6 +240,10 @@ module Cequel
       # @note Secondary index filters cannot be mixed with primary key filters
       #
       def vector_search(params)
+        unless params.is_a?(::Hash) && params.length == 1
+          fail IllegalQuery,
+               "vector_search can only be on a singel column, e.g. vector_search(embedding: [0,0,0,0,0])"
+        end
         scoped(vector_search_params: params)
       end
 

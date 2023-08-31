@@ -186,15 +186,19 @@ module Cequel
       # @return [Symbol] name of the secondary index applied to this column, if
       #   any
       #
-      attr_reader :index_name
+      attr_reader :index_name, :index_settings
 
       #
       # @param (see Column#initialize)
       # @param index_name [Symbol] name this column's secondary index
       #
-      def initialize(name, type, index_name = nil)
+      def initialize(name, type, index_settings = nil)
         super(name, type)
-        @index_name = index_name
+        if index_settings.is_a?(Hash)
+          @index_settings = index_settings
+          @index_name = index_settings[:name]
+        end
+        @index_name ||= index_settings
       end
 
       #
@@ -311,7 +315,7 @@ module Cequel
     #
     class Vector < CollectionColumn
       # @return [Type] the type of keys in this map
-      attr_reader :type, :dimension, :index_settings
+      attr_reader :type, :dimension, :index_name, :index_settings
 
       #
       # @param name [Symbol] name of this column
@@ -320,8 +324,13 @@ module Cequel
       #
       def initialize(name, type, dimension, index_settings = nil)
         super(name, type)
-        @dimensions = dimension
-        @index_settings = index_settings
+        @dimension = dimension
+
+        if index_settings.is_a?(Hash)
+          @index_settings = index_settings
+          @index_name = index_settings[:name]
+        end
+        @index_name ||= index_settings
       end
 
       def indexed?
