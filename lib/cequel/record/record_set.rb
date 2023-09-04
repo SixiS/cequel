@@ -107,7 +107,7 @@ module Cequel
 
       # @private
       def self.default_attributes
-        { scoped_key_values: [], select_columns: [], scoped_secondary_columns: {} }
+        { scoped_key_values: [], select_columns: [], scoped_secondary_columns: {}, cql_fragments: [] }
       end
 
       # @return [Class] the Record class that this collection yields instances
@@ -204,15 +204,10 @@ module Cequel
       def where(*args)
         if args.length == 1
           column_filters = args.first.symbolize_keys
-        elsif args.length == 2
-          warn "where(column_name, value) is deprecated. Use " \
-               "where(column_name => value) instead"
-          column_filters = {args.first.to_sym => args.second}
-        else
-          fail ArgumentError,
-               "wrong number of arguments (#{args.length} for 1..2)"
+          filter_columns(column_filters)
+        elsif args.length >= 2
+          filter_by_cql_fragment(args)
         end
-        filter_columns(column_filters)
       end
 
       #
@@ -777,7 +772,7 @@ module Cequel
                    :row_limit, :lower_bound, :upper_bound,
                    :scoped_secondary_columns, :query_consistency,
                    :query_page_size, :query_paging_state,
-                   :allow_filtering, :vector_search_params
+                   :allow_filtering, :vector_search_params, :cql_fragments
 
       protected
 
@@ -841,6 +836,12 @@ module Cequel
           else
             record_set[key_value]
           end
+        end
+      end
+
+      def filter_by_cql_fragment(args)
+        scoped do |attributes|
+          attributes[:cql_fragments] << args
         end
       end
 
