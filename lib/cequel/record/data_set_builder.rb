@@ -56,7 +56,7 @@ module Cequel
                      :scoped_secondary_columns, :lower_bound,
                      :upper_bound, :reversed?, :order_by_column,
                      :query_consistency, :query_page_size, :query_paging_state,
-                     :ascends_by?, :allow_filtering, :vector_search_params
+                     :ascends_by?, :allow_filtering, :vector_search_params, :cql_fragments
 
       private
 
@@ -75,6 +75,11 @@ module Cequel
         end
         if scoped_secondary_columns
           self.data_set = data_set.where(scoped_secondary_columns)
+        end
+        if cql_fragments
+          cql_fragments.each do |cql_fragment|
+            self.data_set = data_set.where(*cql_fragment)
+          end
         end
       end
 
