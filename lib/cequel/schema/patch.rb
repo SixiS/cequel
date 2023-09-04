@@ -96,7 +96,7 @@ module Cequel
           @column = column
           if column.respond_to?(:index_settings)
             @index_settings = column.index_settings
-            @index_name = @index_settings&.fetch(:name, nil)
+            @index_name = @index_settings&.fetch(:index_name, nil)
           end
           if column.respond_to?(:index_name)
             @index_name ||= column.index_name

@@ -154,9 +154,9 @@ module Cequel
           dsl.map(name, key_type, value_type)
         end
 
-        def vector(name, type, dimensions, options = {})
+        def vector(name, type, dimension, options = {})
           super
-          dsl.vector(name, type, dimensions, options)
+          dsl.vector(name, type, dimension, options)
         end
 
         def table_property(name, value)
