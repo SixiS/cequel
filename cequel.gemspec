@@ -26,7 +26,7 @@ DESC
   s.test_files = Dir['spec/examples/**/*.rb']
   s.required_ruby_version = '>= 2.0'
 
-  s.add_runtime_dependency 'activemodel', '>= 4.0'
+  s.add_runtime_dependency 'activemodel', '>= 6.1'
   s.add_runtime_dependency 'cassandra-driver', '~> 3.0'
   s.add_development_dependency 'appraisal', '~> 1.0'
   s.add_development_dependency 'wwtd', '~> 0.5'
@@ -36,7 +36,7 @@ DESC
   s.add_development_dependency 'rspec-retry', '~> 0.5'
   s.add_development_dependency 'rubocop', '~> 0.49'
   s.add_development_dependency 'timecop', '~> 0.7'
-  s.add_development_dependency 'travis', '~> 1.7'
+  s.add_development_dependency 'travis'
   s.add_development_dependency 'yard', '~> 0.9.20'
   s.add_development_dependency 'parallel', '~> 1.10'
   s.requirements << 'Cassandra >= 2.0.0'
