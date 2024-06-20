@@ -51,6 +51,8 @@ module Cequel
       attr_reader :query_page_size
       attr_reader :query_paging_state
       attr_reader :allow_filtering
+      # TODO - Document
+      attr_reader :vector_search_params
 
       def_delegator :keyspace, :write_with_options
 
@@ -65,6 +67,7 @@ module Cequel
         @table_name, @keyspace = table_name, keyspace
         @select_columns, @ttl_columns, @writetime_columns, @row_specifications,
           @sort_order = [], [], [], [], {}
+        @vector_search_params = nil
       end
 
       #
@@ -553,6 +556,12 @@ module Cequel
         end
       end
 
+      def vector_search(params)
+        clone.tap do |data_set|
+          data_set.vector_search_params = params
+        end
+      end
+
       # rubocop:disable LineLength
 
       #
@@ -656,6 +665,7 @@ module Cequel
           .append(" FROM #{table_name}")
           .append(*row_specifications_cql)
           .append(sort_order_cql)
+          .append(vector_search_cql)
           .append(limit_cql)
           .append(allow_filtering_cql)
       end
@@ -696,7 +706,7 @@ module Cequel
         end
       end
 
-      attr_writer :row_limit, :query_consistency, :query_page_size, :query_paging_state, :allow_filtering
+      attr_writer :row_limit, :query_consistency, :query_page_size, :query_paging_state, :allow_filtering, :vector_search_params
 
       def results
         @results ||= execute_cql(cql)
@@ -735,6 +745,7 @@ module Cequel
         @writetime_columns = source.writetime_columns.clone
         @row_specifications = source.row_specifications.clone
         @sort_order = source.sort_order.clone
+        @vector_search_params = source.vector_search_params.clone
       end
 
       def select_cql
@@ -759,6 +770,14 @@ module Cequel
             .map { |column, direction| "#{column} #{direction.to_s.upcase}" }
             .join(', ')
           " ORDER BY #{order}"
+        end
+      end
+
+      def vector_search_cql
+        if vector_search_params && vector_search_params.any?
+          column = vector_search_params.keys[0]
+          vector = vector_search_params.values[0]
+          " ORDER BY #{column} ANN OF #{vector}"
         end
       end
 

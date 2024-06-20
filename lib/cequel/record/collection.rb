@@ -539,5 +539,210 @@ module Cequel
       def_delegator 'column.key_type', :cast, :cast_key
       private :cast_key
     end
+
+    #
+    # The value of a list column in a {Record} instance. List collections
+    # encapsulate and behave like the built-in `Array` type.
+    #
+    # @see http://cassandra.apache.org/doc/cql3/CQL.html#list
+    #   CQL documentation for the list type
+    # @since 1.0.0
+    #
+    class Vector < DelegateClass(Array)
+      include Collection
+
+      # These methods are not available on vectors because they require reading
+      # collection data before writing it.
+      NON_ATOMIC_MUTATORS = [
+        :collect!,
+        :delete_if,
+        :fill,
+        :flatten!,
+        :insert,
+        :keep_if,
+        :map!,
+        :pop,
+        :reject!,
+        :reverse!,
+        :rotate!,
+        :select!,
+        :shift,
+        :shuffle!,
+        :slice!,
+        :sort!,
+        :sort_by!,
+        :uniq!
+      ]
+      NON_ATOMIC_MUTATORS
+        .each { |method| undef_method(method) if method_defined? method }
+
+      #
+      # Set the value at a position or range of positions. This modification
+      # will be staged and persisted as an atomic list update when the record
+      # is saved. If the collection data is loaded in memory, it will also be
+      # modified accordingly.
+      #
+      # @return [void]
+      #
+      # @see DataSet#list_replace
+      # @note Negative positions are not supported, as they are not allowed in
+      #   CQL list operations.
+      #
+      # @overload []=(position, element)
+      #
+      #   @param position [Integer] position at which to set element
+      #   @param element element to insert at position in list
+      #
+      # @overload []=(range, elements)
+      #
+      #   @param range [Range] range of positions at which to replace elements
+      #   @param elements [Array] new elements to replace in this range
+      #
+      # @overload []=(start_position, count, elements)
+      #
+      #   @param start_position [Integer] position at which to begin replacing
+      #     elements
+      #   @param count [Integer] number of elements to replace
+      #   @param elements [Array] new elements to replace in this range
+      #
+      def []=(*args)
+        if args[0].is_a?(Integer) && args.count == 2
+          # single element set/replace
+          elem = cast_element(args[1])
+
+          to_update do
+            set_item(args[0], elem)
+          end
+          to_modify { super(args[0], elem) }
+
+        else
+          # multi-element set/replace
+          range = if args[0].is_a?(Range)
+                    args[0]
+                  elsif args[0].is_a?(Integer) && args[1].is_a?(Integer)
+                    args[0]..(args[0]+args[1]-1)
+                  else
+                    Kernel.raise ArgumentError, "[i]=elem or [i,count]=elems or [a..b]=elems"
+                  end
+          elems = cast_collection(Array.wrap(args[-1]))
+
+          to_update do
+            set_range(range, elems, args[-1])
+          end
+          to_modify { super(range, elems) }
+        end
+      end
+
+      #
+      # Remove all elements from the vector. This will propagate to the database
+      # as a DELETE of the list column.
+      #
+      # @return [List] self
+      #
+      def clear
+        to_update { deleter.delete_columns(column_name) }
+        to_modify { super }
+      end
+
+      #
+      # Concatenate another collection onto this vector.
+      #
+      # @param array [Array] elements to concatenate
+      # @return [List] self
+      #
+      def concat(array)
+        array = cast_collection(array)
+        to_update { updater.list_append(column_name, array) }
+        to_modify { super }
+      end
+
+      #
+      # Remove all instances of a given value from the vector.
+      #
+      # @param object value to remove
+      # @return [List] self
+      #
+      def delete(object)
+        object = cast_element(object)
+        to_update { updater.list_remove(column_name, object) }
+        to_modify { super }
+      end
+
+      #
+      # Remove the element at a given position from the vector.
+      #
+      # @param index [Integer] position from which to remove the element
+      # @return [List] self
+      #
+      def delete_at(index)
+        to_update { deleter.list_remove_at(column_name, index) }
+        to_modify { super }
+      end
+
+      #
+      # Push (append) one or more elements to the end of the list.
+      #
+      # @param objects value(s) to add to the end of the list
+      # @return [List] self
+      #
+      def push(*objects)
+        objects.map! { |object| cast_element(object) }
+        to_update { updater.list_append(column_name, objects) }
+        to_modify { super }
+      end
+      alias_method :<<, :push
+      alias_method :append, :push
+
+      #
+      # Replace the entire contents of this vector with a new collection
+      #
+      # @param array [Array] new elements for this list
+      # @return [List] self
+      #
+      def replace(array)
+        array = cast_collection(array)
+        to_update { updater.set(column_name => array) }
+        to_modify { super }
+      end
+
+      #
+      # Prepend one or more values to the beginning of this list
+      #
+      # @param objects value(s) to add to the beginning of the list
+      # @return [List] self
+      #
+      def unshift(*objects)
+        objects.map!(&method(:cast_element))
+        prepared = @model.class.connection.bug8733_version? ? objects.reverse : objects
+        to_update { updater.list_prepend(column_name, prepared) }
+        to_modify { super }
+      end
+      alias_method :prepend, :unshift
+
+      protected
+
+      def set_item(position, elem)
+        elem = cast_element(elem)
+
+        updater.list_replace(column_name, position, elem)
+      end
+
+      def set_range(range, elems, _raw_elems)
+        replace_range = if elems.count < range.count
+                          range.begin..(range.begin+elems.count-1)
+                        else
+                          range
+                        end
+        delete_range = (replace_range.end+1)..range.end
+
+        replace_range.zip(elems).each do |position, elem|
+          updater.list_replace(column_name, position, elem)
+        end
+
+        delete_range.to_a.reverse.each do |position|
+          deleter.list_remove_at(column_name, position)
+        end
+      end
+    end
   end
 end
