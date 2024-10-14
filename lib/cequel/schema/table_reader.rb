@@ -123,6 +123,8 @@ module Cequel
           Set.new(c.name.to_sym, type(c.type.value_type))
         when Cassandra::Types::Map
           Map.new(c.name.to_sym, type(c.type.key_type), type(c.type.value_type))
+        when Cassandra::Types::Vector
+          Vector.new(c.name.to_sym, type(c.type.value_type), c.type.dimension.name, index_name(c))
         else
           fail "Unsupported type #{c.type.inspect}"
         end

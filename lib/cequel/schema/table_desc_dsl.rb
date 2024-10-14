@@ -87,8 +87,13 @@ module Cequel
       #     `true` to infer an index name by convention
       #
       def column(name, type, options = {})
-        columns << DataColumn.new(name, type(type),
-                                  figure_index_name(name, options.fetch(:index, nil)))
+        index_settings = options.fetch(:index, nil)
+        if index_settings.is_a?(::Hash)
+          index_settings[:name] ||= figure_index_name(name, true)
+        else
+          index_settings = figure_index_name(name, index_settings)
+        end
+        columns << DataColumn.new(name, type(type), index_settings)
       end
 
       # Describe a column of type list.
@@ -120,6 +125,23 @@ module Cequel
       #   `Cequel::Type` or a symbol. See `Cequel::Type`.
       def map(name, key_type, value_type)
         columns << Map.new(name, type(key_type), type(value_type))
+      end
+
+      # Describe a column of type vector.
+      #
+      # name - The name of the column.
+      # type - The type of the elements of this column. Either a
+      #   `Cequel::Type` or a symbol. See `Cequel::Type`.
+      # dimension - The dimension of the vector
+      #
+      def vector(name, type, dimension, options = {})
+        index_settings = options.fetch(:index, nil)
+        if index_settings.is_a?(::Hash)
+          index_settings[:name] ||= figure_index_name(name, true)
+        else
+          index_settings = figure_index_name(name, index_settings)
+        end
+        columns << Vector.new(name, type(type), dimension, index_settings)
       end
 
       # Describe property of the table.
