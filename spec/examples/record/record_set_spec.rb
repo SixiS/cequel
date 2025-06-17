@@ -134,7 +134,7 @@ describe Cequel::Record::RecordSet do
       it { is_expected.not_to be_transient }
 
       it 'should cast argument to correct type' do
-        expect(Blog.find('blog-0'.force_encoding('ASCII-8BIT'))).to eq(blogs.first)
+        expect(Blog.find(String.new('blog-0').force_encoding('ASCII-8BIT'))).to eq(blogs.first)
       end
 
       it 'should return multiple results as an array from vararg keys' do
@@ -169,8 +169,8 @@ describe Cequel::Record::RecordSet do
       specify { expect(Post.new).to be_transient }
 
       it 'should cast all keys to correct type' do
-        expect(Post['cassandra'.force_encoding('ASCII-8BIT')].
-          find('cequel0'.force_encoding('ASCII-8BIT'))).to be
+        expect(Post[String.new('cassandra').force_encoding('ASCII-8BIT')].
+          find(String.new('cequel0').force_encoding('ASCII-8BIT'))).to be
       end
 
       it 'should raise RecordNotFound if bad argument passed' do
@@ -449,7 +449,7 @@ describe Cequel::Record::RecordSet do
     end
 
     it 'should cast arguments correctly' do
-      expect(Post['cassandra'.force_encoding('ASCII-8BIT')].
+      expect(Post[String.new('cassandra').force_encoding('ASCII-8BIT')].
         find_each(:batch_size => 2).map(&:title)).
         to eq((0...5).map { |i| "Cequel #{i}" })
     end
@@ -472,7 +472,7 @@ describe Cequel::Record::RecordSet do
     end
 
     it 'should cast argument' do
-      expect(Post['cassandra'].after('cequel1'.force_encoding('ASCII-8BIT')).
+      expect(Post['cassandra'].after(String.new('cequel1').force_encoding('ASCII-8BIT')).
         map(&:title)).to eq((2...5).map { |i| "Cequel #{i}" })
     end
 
@@ -496,7 +496,7 @@ describe Cequel::Record::RecordSet do
     end
 
     it 'should cast argument' do
-      expect(Post['cassandra'].from('cequel1'.force_encoding('ASCII-8BIT')).
+      expect(Post['cassandra'].from(String.new('cequel1').force_encoding('ASCII-8BIT')).
         map(&:title)).to eq((1...5).map { |i| "Cequel #{i}" })
     end
 
@@ -531,7 +531,7 @@ describe Cequel::Record::RecordSet do
     end
 
     it 'should cast argument' do
-      expect(Post['cassandra'].before('cequel3'.force_encoding('ASCII-8BIT')).
+      expect(Post['cassandra'].before(String.new('cequel3').force_encoding('ASCII-8BIT')).
         map(&:title)).to eq((0...3).map { |i| "Cequel #{i}" })
     end
   end
@@ -545,7 +545,7 @@ describe Cequel::Record::RecordSet do
     end
 
     it 'should cast argument' do
-      expect(Post['cassandra'].upto('cequel3'.force_encoding('ASCII-8BIT')).
+      expect(Post['cassandra'].upto(String.new('cequel3').force_encoding('ASCII-8BIT')).
         map(&:title)).to eq((0..3).map { |i| "Cequel #{i}" })
     end
 
@@ -564,8 +564,8 @@ describe Cequel::Record::RecordSet do
     end
 
     it 'should cast arguments' do
-      expect(Post['cassandra'].in('cequel1'.force_encoding('ASCII-8BIT')..
-                              'cequel3'.force_encoding('ASCII-8BIT')).
+      expect(Post['cassandra'].in(String.new('cequel1').force_encoding('ASCII-8BIT')..
+                              String.new('cequel3').force_encoding('ASCII-8BIT')).
         map(&:title)).to eq((1..3).map { |i| "Cequel #{i}" })
     end
 

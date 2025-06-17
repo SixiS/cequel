@@ -47,7 +47,7 @@ describe Cequel::Record::Properties do
     end
 
     it 'should cast data column to correct value' do
-      expect(Post.new { |post| post.title = 'Big Data'.force_encoding('US-ASCII') }.
+      expect(Post.new { |post| post.title = String.new('Big Data').force_encoding('US-ASCII') }.
         title.encoding.name).to eq('UTF-8')
     end
 

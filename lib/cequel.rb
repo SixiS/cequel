@@ -1,5 +1,6 @@
 # -*- encoding : utf-8 -*-
 require 'delegate'
+require 'logger'
 
 require 'active_support'
 require 'active_support/deprecation'

@@ -415,7 +415,7 @@ module Cequel
         collection_proxies.delete(name)
       end
 
-      def init_attributes(new_attributes)
+      def cequel_init_attributes(new_attributes)
         @cequel_attributes = {}
         new_attributes.each_pair do |name, value|
           if value.nil?
@@ -432,7 +432,7 @@ module Cequel
         new_attributes =
           Util.deep_copy(default_attributes.except(*dynamic_defaults.keys))
         dynamic_defaults.each { |name, p| new_attributes[name] = p.call }
-        init_attributes(new_attributes)
+        cequel_init_attributes(new_attributes)
 
         @new_record = true
         yield self if block_given?

@@ -40,7 +40,7 @@ module Cequel
           .append("UPDATE #{table_name}")
           .append(*generate_upsert_options(options))
           .append(
-            " SET " << statements.join(', '),
+            " SET #{statements.join(', ')}",
             *bind_vars
         )
       end
