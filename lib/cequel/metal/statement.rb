@@ -12,7 +12,7 @@ module Cequel
       attr_reader :bind_vars
       # @return [Array] cassandra type hints for bind variables
 
-      def initialize(cql_or_prepared='', bind_vars=[])
+      def initialize(cql_or_prepared = +'', bind_vars = [])
         cql, prepared = *case cql_or_prepared
                          when Cassandra::Statements::Prepared
                            [cql_or_prepared.cql, cql_or_prepared]

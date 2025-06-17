@@ -64,9 +64,9 @@ module Cequel
         upsert_options = options.slice(:timestamp, :ttl)
         bind_vars = []
         statement = if upsert_options.empty?
-          ''
+          +''
         else
-          ' USING ' <<
+          +' USING ' <<
           upsert_options.map do |key, value|
             serialized_value =
               case key

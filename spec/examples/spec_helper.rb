@@ -1,4 +1,7 @@
 # -*- encoding : utf-8 -*-
+
+Warning[:deprecated] = true # Enable ruby deprecation warnings
+
 require File.expand_path('../../environment', __FILE__)
 require 'cequel'
 require 'tzinfo'

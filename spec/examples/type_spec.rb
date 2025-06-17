@@ -144,7 +144,7 @@ describe Cequel::Type do
       specify { expect(subject.cast('cql')).to eq('cql') }
       specify { expect(subject.cast(1)).to eq('1') }
       specify { expect(subject.cast('cql').encoding.name).to eq('UTF-8') }
-      specify { expect(subject.cast('cql'.force_encoding('US-ASCII')).
+      specify { expect(subject.cast(String.new('cql').force_encoding('US-ASCII')).
         encoding.name).to eq('UTF-8') }
     end
   end
