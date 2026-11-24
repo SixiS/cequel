@@ -13,6 +13,11 @@ module Cequel
     module NewRelicInstrumentation
       extend ActiveSupport::Concern
 
+      # newrelic_rpm 10 removed the (long unused) `elapsed` argument from
+      # Datastores.notice_statement; older agents still require it.
+      NOTICE_STATEMENT_TAKES_ELAPSED =
+        NewRelic::Agent::Datastores.method(:notice_statement).arity != 1
+
       define_method :execute_with_options_with_newrelic do |statement, options|
 
         operation = nil
@@ -28,8 +33,12 @@ module Cequel
           statement_txt = 'BEGIN BATCH'
         end
 
-        callback = Proc.new do |result, scoped_metric, elapsed|
-          NewRelic::Agent::Datastores.notice_statement(statement_txt, elapsed)
+        callback = Proc.new do |_result, _scoped_metric, elapsed|
+          if NOTICE_STATEMENT_TAKES_ELAPSED
+            NewRelic::Agent::Datastores.notice_statement(statement_txt, elapsed)
+          else
+            NewRelic::Agent::Datastores.notice_statement(statement_txt)
+          end
         end
 
         table = nil
