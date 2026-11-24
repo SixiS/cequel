@@ -185,6 +185,43 @@ module Cequel::Schema
         ).to add_index(:posts_category_idx).of_column(:category)
       end
 
+      context "with a vector column" do
+        let(:index_settings) { {name: :embedding_idx, using: 'sai'} }
+
+        def table_with_vector(index = nil)
+          Table.new(table_name).tap do |t|
+            t.add_column PartitionKey.new(:blog_subdomain, Cequel::Type[:text])
+            t.add_column Vector.new(:embedding, Cequel::Type[:float], 3, index)
+          end
+        end
+
+        it "detects added index declared by name" do
+          expect(
+            described_class.new(table_with_vector, table_with_vector(:embedding_idx)).call
+          ).to add_index(:embedding_idx).of_column(:embedding)
+        end
+
+        it "detects added index declared with settings" do
+          expect(
+            described_class.new(table_with_vector, table_with_vector(index_settings)).call
+          ).to add_index(:embedding_idx).of_column(:embedding)
+        end
+
+        it "ignores an index that already exists in the database" do
+          # TableReader only knows the index name, not its settings
+          expect(
+            described_class.new(table_with_vector(:embedding_idx),
+                                table_with_vector(index_settings)).call
+          ).to be_empty
+        end
+
+        it "detects dropped index" do
+          expect(
+            described_class.new(table_with_vector(:embedding_idx), table_with_vector).call
+          ).to drop_index(:embedding_idx)
+        end
+      end
+
       it "ignores dropped columns" do
         updated_table = Table.new(table_name).tap do |t|
           t.add_column PartitionKey.new(:blog_subdomain, Cequel::Type[:text])

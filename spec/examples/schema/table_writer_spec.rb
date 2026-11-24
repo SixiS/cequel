@@ -221,6 +221,51 @@ describe Cequel::Schema::TableWriter do
       end
     end
 
+    describe 'vector indices', cql: '>= 3.4.7' do
+      let(:described_table) do
+        index = index_option
+        Cequel::Schema::TableDescDsl.new(table_name).eval do
+          key :id, :uuid
+          vector :embedding, :float, 3, :index => index
+        end
+      end
+
+      before do
+        Cequel::Schema::TableWriter.apply(cequel, described_table)
+      end
+
+      shared_examples 'an indexed vector column' do |index_name|
+        it 'should create the index' do
+          expect(table.data_column(:embedding)).to be_indexed
+          expect(table.data_column(:embedding).index_name).
+            to eq(index_name || :"#{table_name}_embedding_idx")
+        end
+
+        it 'should not try to create the index again' do
+          expect(Cequel::Schema::TableDiffer.new(table, described_table).call).
+            to be_empty
+        end
+      end
+
+      context 'with index: true' do
+        let(:index_option) { true }
+        it_behaves_like 'an indexed vector column'
+      end
+
+      context 'with a named index' do
+        let(:index_option) { :silly_vector_idx }
+        it_behaves_like 'an indexed vector column', :silly_vector_idx
+      end
+
+      context 'with index settings' do
+        let(:index_option) do
+          {name: :sai_vector_idx, using: 'sai',
+           options: {similarity_function: 'cosine'}}
+        end
+        it_behaves_like 'an indexed vector column', :sai_vector_idx
+      end
+    end
+
   end
 
 end

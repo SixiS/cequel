@@ -154,6 +154,23 @@ module Cequel::Schema
         expect( subject.column ).to eq column
       end
     end
+
+    context "with index settings" do
+      let(:column) {
+        Vector.new(:embedding, Cequel::Type[:float], 3,
+                   name: :embedding_idx, using: 'sai',
+                   options: {similarity_function: 'cosine'})
+      }
+
+      it "creates a custom index named after the :name setting" do
+        expect( subject.index_name ).to eq :embedding_idx
+        expect( subject.to_cql ).to eq(
+          %Q|CREATE CUSTOM INDEX "embedding_idx" ON "#{table_name}" | +
+          %Q|("embedding") USING 'sai' | +
+          %Q|WITH OPTIONS = {'similarity_function':'cosine'}|
+        )
+      end
+    end
   end
 
     describe Patch::AddColumn do

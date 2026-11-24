@@ -333,8 +333,13 @@ module Cequel
         @index_name ||= index_settings
       end
 
+      #
+      # @return [Boolean] true if this column has an index, whether declared
+      #   with a name, with `true`, with a settings hash, or read back from
+      #   the database
+      #
       def indexed?
-        index_settings.present?
+        !!@index_name
       end
 
       # (see Column#to_cql)
