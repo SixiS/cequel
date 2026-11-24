@@ -191,10 +191,15 @@ module Cequel
       #   @param column_values [Hash] map of key column names to values
       #   @return [RecordSet] record set with filter applied
       #
+      # @overload where(cql_fragment, *bind_vars)
+      #   @param cql_fragment [String] CQL condition, e.g. `'title = ?'`
+      #   @param bind_vars values for the bind markers in the fragment
+      #   @return [RecordSet] record set with filter applied
+      #
       # @raise [IllegalQuery] if applying filter would generate an impossible
       #   query
       # @raise [ArgumentError] if the specified column is not a column that
-      #   can be filtered on
+      #   can be filtered on, or the arguments are not one of the forms above
       #
       # @note Filtering on a primary key requires also filtering on all prior
       #   primary keys
@@ -202,11 +207,17 @@ module Cequel
       # @note Secondary index filters cannot be mixed with primary key filters
       #
       def where(*args)
-        if args.length == 1
-          column_filters = args.first.symbolize_keys
-          filter_columns(column_filters)
-        elsif args.length >= 2
+        if args.first.is_a?(::String)
           filter_by_cql_fragment(args)
+        elsif args.length == 1
+          filter_columns(args.first.symbolize_keys)
+        elsif args.length == 2
+          warn "where(column_name, value) is deprecated. Use " \
+               "where(column_name => value) instead"
+          filter_columns(args.first.to_sym => args.second)
+        else
+          fail ArgumentError,
+               "wrong number of arguments (#{args.length} for 1..2)"
         end
       end
 

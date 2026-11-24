@@ -832,6 +832,48 @@ describe Cequel::Record::RecordSet do
         ).entries.length).to be(1)
       end
     end
+
+    context 'cql fragment' do
+      let(:records) { [posts, blogs] }
+
+      it 'should filter by a fragment with bind variables' do
+        expect(Post.where('blog_subdomain = ?', 'cassandra'))
+          .to eq(cassandra_posts)
+      end
+
+      it 'should filter by a fragment without bind variables' do
+        expect(Post.where("blog_subdomain = 'cassandra'"))
+          .to eq(cassandra_posts)
+      end
+
+      it 'should combine fragments with hash filters' do
+        expect(Post.where(blog_subdomain: 'cassandra')
+          .where('permalink = ?', 'cequel0'))
+          .to eq(cassandra_posts.first(1))
+      end
+    end
+
+    context 'deprecated column name and value arguments' do
+      let(:records) { [posts, blogs] }
+
+      it 'should filter by the column and warn' do
+        scope = nil
+        expect { scope = Post.where(:blog_subdomain, 'cassandra') }
+          .to output(/where\(column_name, value\) is deprecated/).to_stderr
+        expect(scope).to eq(cassandra_posts)
+      end
+    end
+
+    context 'invalid arguments' do
+      it 'should raise ArgumentError with no arguments' do
+        expect { Post.where }.to raise_error(ArgumentError)
+      end
+
+      it 'should raise ArgumentError with too many non-fragment arguments' do
+        expect { Post.where(:blog_subdomain, 'cassandra', 'postgres') }
+          .to raise_error(ArgumentError)
+      end
+    end
   end
 
   describe '#consistency' do
