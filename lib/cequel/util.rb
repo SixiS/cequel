@@ -67,9 +67,9 @@ module Cequel
 
       def delegate(*args, &block)
         return super if args.one?
-        methods = args[0]
-        options = args[1]
-        Module.instance_method(:delegate).bind(self).call(methods, **options)
+        options = args.last.is_a?(::Hash) ? args.pop : {}
+        Module.instance_method(:delegate).bind(self)
+          .call(*args, **options, &block)
       end
     end
   end
