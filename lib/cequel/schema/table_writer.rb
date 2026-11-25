@@ -65,8 +65,7 @@ module Cequel
       def index_statement_for(column)
         if column.respond_to?(:index_settings) && column.index_settings
           index_settings = column.index_settings
-          index_name = index_settings[:index_name] || column.index_name
-          cql = %Q|CREATE CUSTOM INDEX "#{index_name}" ON "#{table.name}" ("#{column.name}")|
+          cql = %Q|CREATE CUSTOM INDEX "#{column.index_name}" ON "#{table.name}" ("#{column.name}")|
           if index_settings&.fetch(:using, nil)
             cql += %Q| USING '#{index_settings[:using]}'|
           end

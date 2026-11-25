@@ -26,6 +26,9 @@ module Cequel
     class TableDescDsl < BasicObject
       extend ::Cequel::Util::Forwardable
 
+      # Index class used for a vector column when none is specified
+      DEFAULT_VECTOR_INDEX_CLASS = 'StorageAttachedIndex'.freeze
+
       # Initialize a new instance
       #
       # table_name - The name of the table being described.
@@ -133,13 +136,23 @@ module Cequel
       # type - The type of the elements of this column. Either a
       #   `Cequel::Type` or a symbol. See `Cequel::Type`.
       # dimension - The dimension of the vector
+      # options
+      #   :index - `true` or an index name for a storage-attached index, or
+      #     a hash of index settings (`:name`, `:using`, `:options`)
       #
       def vector(name, type, dimension, options = {})
         index_settings = options.fetch(:index, nil)
-        if index_settings.is_a?(::Hash)
-          index_settings[:name] ||= figure_index_name(name, true)
-        else
-          index_settings = figure_index_name(name, index_settings)
+        unless index_settings.is_a?(::Hash)
+          index_name = figure_index_name(name, index_settings)
+          index_settings = index_name && {name: index_name}
+        end
+        if index_settings
+          # Similarity search needs a storage-attached index; a regular
+          # secondary index on a vector cannot serve ANN queries.
+          index_settings = {
+            name: figure_index_name(name, true),
+            using: DEFAULT_VECTOR_INDEX_CLASS
+          }.merge(index_settings)
         end
         columns << Vector.new(name, type(type), dimension, index_settings)
       end
