@@ -245,6 +245,13 @@ describe Cequel::Schema::TableWriter do
           expect(Cequel::Schema::TableDiffer.new(table, described_table).call).
             to be_empty
         end
+
+        it 'should create an index that supports similarity search' do
+          expect {
+            cequel.execute("SELECT id FROM #{table_name} " \
+                           "ORDER BY embedding ANN OF [0.1, 0.2, 0.3] LIMIT 1")
+          }.not_to raise_error
+        end
       end
 
       context 'with index: true' do
@@ -263,6 +270,11 @@ describe Cequel::Schema::TableWriter do
            options: {similarity_function: 'cosine'}}
         end
         it_behaves_like 'an indexed vector column', :sai_vector_idx
+      end
+
+      context 'with index settings that omit the index class' do
+        let(:index_option) { {options: {similarity_function: 'cosine'}} }
+        it_behaves_like 'an indexed vector column'
       end
     end
 
